@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="keywords" th:content="${@module.get('sysConfig').SITE_KWD}">
+		<meta name="description" th:content="${@module.get('sysConfig').SITE_DESC}">
+		<title th:text="${@module.get('sysConfig').SITE_NAME}"></title>
+		<link rel="stylesheet" th:href="@{/libs/bootstrap/bootstrap.min.css}"/>
+		<link rel="stylesheet" th:href="@{/libs/swiper/css/swiper.min.css}"/>
+		<link rel="stylesheet" th:href="@{/libs/font-icon/icon.css}"/>
+		<link rel="stylesheet" th:href="@{/libs/theme/zblog/css/web-common.css}" />
+		<link rel="stylesheet" th:href="@{/libs/theme/zblog/css/web-blog.css}" />
+		<link rel="stylesheet" th:href="@{/libs/zplayer/css/zplayer.min.css}" />
+		<link rel="stylesheet" th:href="@{/libs/theme/live2d/css/live2d.css}" />
+		<script th:src="@{/js/jquery.min.js}"></script>
+		<script th:src="@{/libs/bootstrap/bootstrap.min.js}"></script>
+		<script th:src="@{/libs/swiper/js/swiper.min.js}"></script>
+		<script th:src="@{/js/hc-sticky.js}" ></script>
+		<script th:src="@{/libs/theme/zblog/js/zb-blog.js}"></script>
+		<script th:src="@{/libs/zplayer/js/zplayer.min.js}"></script>
+	</head>
+	<body>
+		<header id="header">
+			<div th:replace="home/fragments/navbar :: navbar"></div>
+		</header>
+		<div class="zb-container zb-content">
+			<div class="zb-main">
+				<div class="swiper-container mb-20" th:if="${not #lists.isEmpty(sliderList)}">
+					<div class="swiper-wrapper">
+						<div th:each="item:${sliderList}" class="swiper-slide">
+							<a th:href="@{${'/blog/article/'+item.id}}">
+								<img th:src="${item.sliderImg}">
+								<p class="slider-title" th:text="${item.title}"></p>
+							</a>
+						</div>
+					</div>
+					<div class="swiper-pagination"></div>
+					<div class="swiper-button-prev"><i class="fa fa-chevron-circle-left"></i></div>
+					<div class="swiper-button-next"><i class="fa fa-chevron-circle-right"></i></div>
+				</div>
+
+				<div class="no-article-content" th:if="${#lists.isEmpty(articleList)}">
+					Sorry, 暂未发现任何文章~
+				</div>
+				<div th:each="item,temp : ${articleList}" class="blogs">
+				  <span th:if="${item.top==1}" class="fa fa-superscript-top superscript superscript-top"></span>
+			      <span class="blogpic"><a><img th:src="${item.coverImage}"></a><span class="blog-type"><a th:href="@{${'/blog/category/'+item.categoryId}}" th:text="${item.bizCategory.name}"></a></span></span>
+				  <h3 class="blogtitle"><a th:href="@{${'/blog/article/'+item.id}}" th:text="${item.title}" ></a></h3>
+			      <p  th:text="${item.description}" class="blogtext"></p>
+			      <div class="bloginfo">
+			        <ul>
+			          <li><span class="fa fa-clock-o"></span><span th:text="${#dates.format(item.createTime,'yyyy-MM-dd')}"></span></li>
+			          <li><span class="fa fa-eye"></span><span th:text="${item.lookCount}? ${item.lookCount} : 0"></span></li>
+					  <li><a class="comment-link-a" th:href="@{${'/blog/article/'+item.id+'#comment'}}"><span class="fa fa-comments-o"></span><span th:text="${item.commentCount}? ${item.commentCount} : 0"></span></a></li>
+			        </ul>
+					<a class="read-more" th:href="@{${'/blog/article/'+item.id}}">阅读全文</a>
+			      </div>
+			    </div>
+				<div th:replace="home/fragments/pagebar :: pageBar"></div>
+
+			</div>
+			<div th:replace="home/fragments/sidebar :: sidebar"></div>
+		</div>
+
+
+        <div id="zplayer" th:replace="/fragments/musicPlayer :: musicPlayer"></div>
+
+		<div id="landlord"  style="left:5px;bottom:0px;">
+			<div class="message" style="opacity:0"></div>
+			<canvas id="live2d" width="500" height="560" class="live2d"></canvas>
+			<div class="live_talk_input_body">
+				<div class="live_talk_input_name_body">
+					<input name="name" type="text" class="live_talk_name white_input" id="AIuserName" autocomplete="off" placeholder="你的名字" />
+				</div>
+				<div class="live_talk_input_text_body">
+					<input name="talk" type="text" class="live_talk_talk white_input" id="AIuserText" autocomplete="off" placeholder="要和我聊什么呀？"/>
+					<button type="button" class="live_talk_send_btn" id="talk_send">发送</button>
+				</div>
+			</div>
+			<input name="live_talk" id="live_talk" value="1" type="hidden" />
+			<div class="live_ico_box">
+				<div class="live_ico_item type_info" id="showInfoBtn"></div>
+				<div class="live_ico_item type_talk" id="showTalkBtn"></div>
+				<div class="live_ico_item type_music" id="musicButton"></div>
+				<div class="live_ico_item type_youdu" id="youduButton"></div>
+				<div class="live_ico_item type_quit" id="hideButton"></div>
+				<input name="live_statu_val" id="live_statu_val" value="0" type="hidden" />
+				<input id="duType" value="douqilai,l2d_caihong" type="hidden">
+			</div>
+		</div>
+		<div id="open_live2d">召唤陈思龙</div>
+
+		<div th:replace="home/fragments/footer :: copyrightDark"></div>
+        <div class="return_top"><a class=" fa fa-arrow-up"></a></div>
+
+		<script>
+            var message_Path = 'libs/theme/live2d/';//资源目录，如果目录不对请更改
+            var talkAPI = "";//如果有类似图灵机器人的聊天接口请填写接口路径
+        </script>
+        <script th:src="@{/libs/theme/live2d/js/live2d.js}"></script>
+        <script th:src="@{/libs/theme/live2d/js/message.js}"></script>
+	</body>
+
+</html>
